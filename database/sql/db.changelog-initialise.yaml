@@ -1,0 +1,65 @@
+
+databaseChangeLog:
+- changeSet:
+    id:  create-user-simplepos
+    author: ardikapras
+    changes:
+      - sql:
+          splitStatements: false
+          sql: |
+                DO $$
+                BEGIN
+                CREATE ROLE posuser WITH LOGIN SUPERUSER INHERIT CREATEDB CREATEROLE NOREPLICATION password 'posuser';
+                EXCEPTION WHEN duplicate_object THEN RAISE NOTICE '%, skipping', SQLERRM USING ERRCODE = SQLSTATE;
+                END
+                $$;
+          stripComments:  true
+          logicalFilePath: path-independent
+          runOnChange: true
+
+- changeSet:
+    id: create-database
+    author: ardikapras
+    runInTransaction: false
+    logicalFilePath: path-independent
+    validCheckSum: ANY
+    changes:
+      - sql:
+          sql: |
+                CREATE DATABASE simplepos WITH OWNER = posuser ENCODING = 'UTF8' LC_COLLATE = 'en_US.utf8' LC_CTYPE = 'en_US.utf8' CONNECTION_LIMIT = -1;
+
+- changeSet:
+    id:  create-user-posreadonly
+    author: ardakapras
+    changes:
+      - sql:
+          splitStatements: false
+          sql: |
+                DO $$
+                BEGIN
+                CREATE USER posreadonly WITH ENCRYPTED PASSWORD 'posreadonly';
+                EXCEPTION WHEN duplicate_object THEN RAISE NOTICE '%, skipping', SQLERRM USING ERRCODE = SQLSTATE;
+                END
+                $$;
+                SELECT format('GRANT CONNECT ON DATABASE %I TO posreadonly;', datname) FROM pg_database where datname not in ('template1','template0','postgres');
+          stripComments:  true
+          logicalFilePath: path-independent
+          runOnChange: true
+
+- changeSet:
+    id:  create-user-pos-app-user
+    author: ardikapras
+    changes:
+      - sql:
+          splitStatements: false
+          sql: |
+                DO $$
+                BEGIN
+                CREATE USER pos_app_user WITH ENCRYPTED PASSWORD 'pos_app_user';
+                EXCEPTION WHEN duplicate_object THEN RAISE NOTICE '%, skipping', SQLERRM USING ERRCODE = SQLSTATE;
+                END
+                $$;
+                SELECT format('GRANT CONNECT ON DATABASE %I TO pos_app_user;', datname) FROM pg_database where datname not in ('template1','template0','postgres');
+          stripComments:  true
+          logicalFilePath: path-independent
+          runOnChange: true
