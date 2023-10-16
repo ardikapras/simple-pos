@@ -10,4 +10,4 @@ pluginManagement {
 
 rootProject.name = 'monorepo-sample-project'
 
-include ':frontend:main-app', ':backend:core-api'
+include ':frontend:main-app', ':backend:core-api', ':backend:backend-commons'
